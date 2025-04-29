@@ -10,10 +10,13 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdatePatchDTO } from './dto/update-patch.dto';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   private async verifyId(id) {
     const task = await this.prisma.users.findFirst({
@@ -38,7 +41,7 @@ export class UserService {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-      return this.prisma.users.create({
+      const user = await this.prisma.users.create({
         data: {
           name,
           email,
@@ -46,6 +49,15 @@ export class UserService {
           password: hashedPassword,
         },
       });
+
+      const payload = { id: user.id, email: user.email };
+      const token = this.jwtService.sign(payload);
+
+      return{
+        user,
+        token
+      }
+
     } catch (e) {
       throw new InternalServerErrorException('Internal server error');
     }

@@ -18,10 +18,11 @@ import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 export class UserController {
   constructor(private readonly userService: UserService) {}
   
-  @UseGuards(JwtAuthGuard)
+//@UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() { name, email, telephone, password }) {
-    return this.userService.create({ name, email, telephone, password });
+  async create(@Body() { name, email, telephone, password }) {
+    const result = await this.userService.create({ name, email, telephone, password });
+    return result;
   }
 
   @Get()
