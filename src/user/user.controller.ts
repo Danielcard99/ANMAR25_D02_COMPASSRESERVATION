@@ -8,13 +8,17 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  UseGuards
 } from '@nestjs/common';
 import { UserService } from './user.service';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
+  
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() { name, email, telephone, password }) {
     return this.userService.create({ name, email, telephone, password });
