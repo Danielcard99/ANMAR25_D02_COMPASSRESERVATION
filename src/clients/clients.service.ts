@@ -103,15 +103,23 @@ export class ClientService {
     return this.exists(id);
   }
 
+  async delete(id: number) {
+    await this.exists(id);
+
+    return this.prisma.client.delete({
+      where: { id },
+    });
+  }
+
   async exists(id: number) {
-    const user = await this.prisma.client.findUnique({
+    const client = await this.prisma.client.findUnique({
       where: { id },
     });
 
-    if (!user) {
-      throw new NotFoundException(`user ${id} does not exist`);
+    if (!client) {
+      throw new NotFoundException(`client ${id} does not exist`);
     }
 
-    return user;
+    return client;
   }
 }
