@@ -6,6 +6,8 @@ import {
 import { CreateClientDto } from './dto/create-client.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { FilterClientDto } from './dto/filter-client.dto';
+import { Prisma } from 'generated/prisma';
 
 @Injectable()
 export class ClientService {
@@ -52,6 +54,49 @@ export class ClientService {
         ...(birthDate && { birthDate: new Date(birthDate) }),
       },
     });
+  }
+
+  async list(filters: FilterClientDto) {
+    const page = isNaN(Number(filters.page)) ? 1 : Number(filters.page);
+    const limit = isNaN(Number(filters.limit)) ? 5 : Number(filters.limit);
+
+    const skip = (page - 1) * limit;
+    const take = limit;
+
+    const whereConditions: Prisma.ClientWhereInput = {};
+
+    if (filters.email) {
+      whereConditions.email = { contains: filters.email };
+    }
+
+    if (filters.name) {
+      whereConditions.name = { contains: filters.name };
+    }
+
+    if (filters.cpf) {
+      whereConditions.cpf = { contains: filters.cpf };
+    }
+
+    if (filters.status) {
+      whereConditions.status = filters.status;
+    }
+
+    const [clients, totalCount] = await Promise.all([
+      this.prisma.client.findMany({
+        skip,
+        take,
+        where: whereConditions,
+      }),
+      this.prisma.client.count({ where: whereConditions }),
+    ]);
+
+    return {
+      total: totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+      clients,
+    };
   }
 
   async exists(id: number) {
