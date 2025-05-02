@@ -33,4 +33,9 @@ export class ClientController {
   async list(@Query() filters: FilterClientDto) {
     return this.clientService.list(filters);
   }
+
+  @Get(':id')
+  async listById(@Param('id') id: number) {
+    return this.clientService.listById(id);
+  }
 }
