@@ -19,6 +19,21 @@ model users {
   status    new_table_status @default(active)
 }
 
+model space {
+  id          Int          @id @default(autoincrement()) @db.UnsignedInt
+  name        String       @unique @db.VarChar(255)
+  description String       @db.Text
+  capacity    Int
+  status      space_status @default(active)
+  createdAt   DateTime     @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime     @updatedAt @db.Timestamp(0)
+}
+
+enum space_status {
+  active
+  inactive
+}
+
 enum new_table_status {
   active
   inactive
