@@ -99,13 +99,19 @@ export class ClientService {
     };
   }
 
+  async listById(id: number) {
+    return this.exists(id);
+  }
+
   async exists(id: number) {
-    if (
-      !(await this.prisma.client.findUnique({
-        where: { id },
-      }))
-    ) {
+    const user = await this.prisma.client.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
       throw new NotFoundException(`user ${id} does not exist`);
     }
+
+    return user;
   }
 }
