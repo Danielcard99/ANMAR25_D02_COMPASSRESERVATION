@@ -20,6 +20,16 @@ enum Status {
   inactive
 }
 
+model space {
+  id          Int      @id @default(autoincrement()) @db.UnsignedInt
+  name        String   @unique @db.VarChar(255)
+  description String   @db.Text
+  capacity    Int
+  status      Status   @default(active)
+  createdAt   DateTime @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime @updatedAt @db.Timestamp(0)
+}
+
 model users {
   id        Int      @id @default(autoincrement()) @db.UnsignedInt
   name      String   @db.VarChar(255)
@@ -54,4 +64,6 @@ model Order {
 
   clientId Int
   client   Client @relation(fields: [clientId], references: [id])
+
+  @@map("orders")
 }
