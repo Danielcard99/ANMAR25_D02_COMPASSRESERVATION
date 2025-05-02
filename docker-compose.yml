@@ -1,16 +1,4 @@
 services:
-  app:
-    build:
-      context: .
-    ports:
-      - '3000:3000'
-    volumes:
-      - .:/app
-    depends_on:
-      - db
-    environment:
-      DATABASE_URL: mysql://root:root@db:3306/mydb
-
   db:
     image: mysql:8.0
     restart: always
