@@ -27,7 +27,10 @@ export class ClientController {
   }
 
   @Patch(':id')
-  async update(@Body() data: UpdateClientDto, @Param('id') id: number) {
+  async update(
+    @Body() data: UpdateClientDto,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
     return this.clientService.update(id, data);
   }
 
@@ -37,7 +40,7 @@ export class ClientController {
   }
 
   @Get(':id')
-  async listById(@Param('id') id: number) {
+  async listById(@Param('id', ParseIntPipe) id: number) {
     return this.clientService.listById(id);
   }
 
