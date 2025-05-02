@@ -8,18 +8,50 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model users {
-  id        Int              @id @default(autoincrement()) @db.UnsignedInt
-  name      String           @db.VarChar(255)
-  email     String           @unique(map: "email_UNIQUE") @db.VarChar(255)
-  telephone String           @db.VarChar(15)
-  password  String           @db.VarChar(255)
-  createdAt DateTime         @default(now()) @db.Timestamp(0)
-  updateAt  DateTime         @default(now()) @db.Timestamp(0)
-  status    new_table_status @default(active)
+enum OrderStatus {
+  OPEN
+  APPROVED
+  DELIVERED
+  CANCELED
 }
 
-enum new_table_status {
+enum Status {
   active
   inactive
+}
+
+model users {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  name      String   @db.VarChar(255)
+  email     String   @unique(map: "email_UNIQUE") @db.VarChar(255)
+  telephone String   @db.VarChar(15)
+  password  String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @db.Timestamp(0)
+  updateAt  DateTime @default(now()) @db.Timestamp(0)
+  status    Status   @default(active)
+}
+
+model Client {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  cpf       String   @unique @db.VarChar(14)
+  birthDate DateTime @db.Date
+  email     String   @unique @db.VarChar(255)
+  telephone String   @db.VarChar(15)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  status    Status   @default(active)
+  orders    Order[]
+
+  @@map("clients")
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  status    OrderStatus @default(OPEN)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  clientId Int
+  client   Client @relation(fields: [clientId], references: [id])
 }
