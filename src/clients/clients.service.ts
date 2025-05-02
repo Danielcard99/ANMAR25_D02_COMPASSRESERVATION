@@ -7,7 +7,7 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { FilterClientDto } from './dto/filter-client.dto';
-import { Prisma } from 'generated/prisma';
+import { Status, Prisma } from 'generated/prisma';
 
 @Injectable()
 export class ClientService {
@@ -103,11 +103,29 @@ export class ClientService {
     return this.exists(id);
   }
 
-  async delete(id: number) {
-    await this.exists(id);
-
-    return this.prisma.client.delete({
+  async inactivate(id: number) {
+    const client = await this.prisma.client.findUnique({
       where: { id },
+      include: { orders: true },
+    });
+
+    if (!client) {
+      throw new NotFoundException(`client ${id} does not exist`);
+    }
+
+    const hasOpenOrApprovedOrders = client.orders.some(
+      (order) => order.status === 'OPEN' || order.status === 'APPROVED',
+    );
+
+    if (hasOpenOrApprovedOrders) {
+      throw new BadRequestException(
+        `cannot inactivate client ${id} with open or approved orders`,
+      );
+    }
+
+    return this.prisma.client.update({
+      where: { id },
+      data: { status: Status.inactive, updatedAt: new Date() },
     });
   }
 
