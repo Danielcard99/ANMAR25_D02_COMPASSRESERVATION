@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -41,7 +42,7 @@ export class ClientController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: number) {
-    await this.clientService.delete(id);
+  async inactivate(@Param('id', ParseIntPipe) id: number) {
+    await this.clientService.inactivate(id);
   }
 }
