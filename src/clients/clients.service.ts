@@ -1,6 +1,11 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UpdateClientDto } from './dto/update-client.dto';
 
 @Injectable()
 export class ClientService {
@@ -33,5 +38,29 @@ export class ClientService {
         birthDate: new Date(birthDate),
       },
     });
+  }
+
+  async update(id: number, data: UpdateClientDto) {
+    await this.exists(id);
+
+    const { birthDate, ...rest } = data;
+
+    return this.prisma.client.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...(birthDate && { birthDate: new Date(birthDate) }),
+      },
+    });
+  }
+
+  async exists(id: number) {
+    if (
+      !(await this.prisma.client.findUnique({
+        where: { id },
+      }))
+    ) {
+      throw new NotFoundException(`user ${id} does not exist`);
+    }
   }
 }
