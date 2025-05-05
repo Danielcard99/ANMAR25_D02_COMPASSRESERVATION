@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -15,14 +16,16 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { ClientService } from './clients.service';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { FilterClientDto } from './dto/filter-client.dto';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
 
 @UsePipes(new ValidationPipe())
+@UseGuards(JwtAuthGuard)
 @Controller('clients')
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
   @Post()
-  create(@Body() data: CreateClientDto) {
+  async create(@Body() data: CreateClientDto) {
     return this.clientService.create(data);
   }
 

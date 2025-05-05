@@ -1,7 +1,17 @@
-import { Controller, Post, Body, Param, Put, Get, Query, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  Put,
+  Get,
+  Query,
+  Delete,
+} from '@nestjs/common';
 import { ResourcesService } from './resources.service';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
+import { Status } from 'generated/prisma';
 
 @Controller('resources')
 export class ResourcesController {
@@ -13,13 +23,24 @@ export class ResourcesController {
   }
 
   @Put(':id')
-  update(@Param('id') id: number, @Body() updateResourceDto: UpdateResourceDto) {
+  update(
+    @Param('id') id: number,
+    @Body() updateResourceDto: UpdateResourceDto,
+  ) {
     return this.resourcesService.update(id, updateResourceDto);
   }
 
   @Get()
-  findAll(@Query('page') page: number, @Query('status') status: string, @Query('name') name: string) {
-    return this.resourcesService.findAll(page, status, name);
+  findAll(
+    @Query('page') page: number,
+    @Query('status') status?: string,
+    @Query('name') name?: string,
+  ) {
+    const statusEnum = status
+      ? (Status[status.toUpperCase() as keyof typeof Status] as Status)
+      : undefined;
+
+    return this.resourcesService.findAll(page, statusEnum, name);
   }
 
   @Get(':id')
