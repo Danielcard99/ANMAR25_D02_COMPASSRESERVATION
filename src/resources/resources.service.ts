@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma.service'; 
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
+import { Status } from 'generated/prisma';
 
 @Injectable()
 export class ResourcesService {
@@ -37,7 +38,7 @@ export class ResourcesService {
     return updatedResource;
   }
 
-  async findAll(page: number = 1, status?: string, name?: string) {
+  async findAll(page: number = 1, status?: Status, name?: string) {
     const take = 10;
     const skip = (page - 1) * take;
 
