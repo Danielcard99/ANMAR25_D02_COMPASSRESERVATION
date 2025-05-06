@@ -8,21 +8,25 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { ClientService } from './clients.service';
 import { UpdateClientDto } from './dto/update-client.dto';
-import { FilterClientDto } from './dto/filter-client.dto';
+import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Status } from 'generated/prisma';
 
 @UsePipes(new ValidationPipe())
+@UseGuards(JwtAuthGuard)
 @Controller('clients')
 export class ClientController {
   constructor(private readonly clientService: ClientService) {}
 
   @Post()
-  create(@Body() data: CreateClientDto) {
+  async create(@Body() data: CreateClientDto) {
     return this.clientService.create(data);
   }
 
@@ -35,8 +39,19 @@ export class ClientController {
   }
 
   @Get()
-  async list(@Query() filters: FilterClientDto) {
-    return this.clientService.list(filters);
+  async list(@Query() query: PaginationDto & { status?: string; name?: string; cpf?: string }) {
+    const { status, name, cpf, ...pagination } = query;
+    let statusEnum: Status | undefined;
+    if (status) {
+      const upperStatus = status.toUpperCase();
+      if (upperStatus === 'ACTIVE') {
+        statusEnum = Status.active;
+      } else if (upperStatus === 'INACTIVE') {
+        statusEnum = Status.inactive;
+      }
+    }
+
+    return this.clientService.list({ ...pagination, status: statusEnum, name, cpf });
   }
 
   @Get(':id')
@@ -46,6 +61,6 @@ export class ClientController {
 
   @Delete(':id')
   async inactivate(@Param('id', ParseIntPipe) id: number) {
-    await this.clientService.inactivate(id);
+    return this.clientService.inactivate(id);
   }
 }

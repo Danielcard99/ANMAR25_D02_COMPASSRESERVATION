@@ -11,6 +11,10 @@ import { UpdatePatchDTO } from './dto/update-patch.dto';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
+import { PaginationService } from '../common/services/pagination.service';
+import { Status } from 'generated/prisma';
 
 @Injectable()
 export class UserService {
@@ -63,11 +67,7 @@ export class UserService {
     }
   }
 
-  async findAll(query: any) {
-    const page = parseInt(query.page) || 1;
-    const limit = parseInt(query.limit) || 10;
-    const skip = (page - 1) * limit;
-
+  async findAll(query: PaginationDto & { name?: string; email?: string; status?: Status }) {
     const { name, email, status } = query;
 
     try {
@@ -91,18 +91,20 @@ export class UserService {
         where.status = status;
       }
 
-      const users = await this.prisma.users.findMany({
-        where,
-        select: {
-          name: true,
-          email: true,
-          telephone: true,
-        },
-        skip,
-        take: limit,
-      });
-
-      return users;
+      return PaginationService.paginate(
+        () => this.prisma.users.findMany({
+          where,
+          select: {
+            name: true,
+            email: true,
+            telephone: true,
+          },
+          skip: (query.page - 1) * query.limit,
+          take: query.limit,
+        }),
+        () => this.prisma.users.count({ where }),
+        query,
+      );
     } catch (e) {
       throw new Error('Internal server error');
     }
@@ -173,7 +175,7 @@ export class UserService {
       await this.prisma.users.update({
         where: { id },
         data: {
-          status: 'inactive',
+          status: Status.inactive,
           updateAt: new Date(),
         },
       });
