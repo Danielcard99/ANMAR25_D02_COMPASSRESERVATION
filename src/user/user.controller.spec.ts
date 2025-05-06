@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { Status } from 'generated/prisma';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -75,16 +76,12 @@ describe('UserController', () => {
 
   describe('findAll', () => {
     it('should return paginated users with query parameters', async () => {
-      const paginationDto: PaginationDto = {
+      const query = {
         page: 1,
         limit: 10,
-      };
-
-      const query = {
-        ...paginationDto,
         name: 'Test',
         email: 'test@example.com',
-        status: 'active',
+        status: 'ACTIVE',
       };
 
       const expectedResponse = {
@@ -104,19 +101,17 @@ describe('UserController', () => {
 
       mockUserService.findAll.mockResolvedValue(expectedResponse);
 
-      const result = await controller.findAll(
-        paginationDto,
-        query.name,
-        query.email,
-        query.status,
-      );
+      const result = await controller.findAll(query);
 
-      expect(userService.findAll).toHaveBeenCalledWith(query);
+      expect(userService.findAll).toHaveBeenCalledWith({
+        ...query,
+        status: Status.active,
+      });
       expect(result).toEqual(expectedResponse);
     });
 
     it('should return paginated users without filters', async () => {
-      const paginationDto: PaginationDto = {
+      const query = {
         page: 1,
         limit: 10,
       };
@@ -135,9 +130,9 @@ describe('UserController', () => {
 
       mockUserService.findAll.mockResolvedValue(expectedResponse);
 
-      const result = await controller.findAll(paginationDto);
+      const result = await controller.findAll(query);
 
-      expect(userService.findAll).toHaveBeenCalledWith(paginationDto);
+      expect(userService.findAll).toHaveBeenCalledWith(query);
       expect(result).toEqual(expectedResponse);
     });
   });
@@ -150,7 +145,7 @@ describe('UserController', () => {
         name: 'Test User',
         email: 'test@example.com',
         telephone: '1234567890',
-        status: 'active',
+        status: Status.active,
       };
 
       mockUserService.findOne.mockResolvedValue(expectedUser);
@@ -187,7 +182,7 @@ describe('UserController', () => {
   });
 
   describe('remove', () => {
-    it('should delete a user', async () => {
+    it('should mark a user as inactive', async () => {
       const userId = 1;
       const expectedResult = 'success deleting user';
 

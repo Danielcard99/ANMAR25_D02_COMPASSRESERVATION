@@ -45,17 +45,16 @@ export class ResourcesService {
 
     return PaginationService.paginate(
       () => this.prisma.resource.findMany({
-        skip: (query.page - 1) * query.limit,
-        take: query.limit,
         where: {
           status,
-          name: name ? { contains: name, mode: 'insensitive' } : undefined,
+          name: name ? { contains: name } : undefined,
         },
+        orderBy: { createdAt: 'desc' },
       }),
       () => this.prisma.resource.count({
         where: {
           status,
-          name: name ? { contains: name, mode: 'insensitive' } : undefined,
+          name: name ? { contains: name } : undefined,
         },
       }),
       query,
@@ -83,7 +82,7 @@ export class ResourcesService {
     const updatedResource = await this.prisma.resource.update({
       where: { id },
       data: {
-        status: 'inactive',
+        status: Status.inactive,
         updatedAt: new Date(),
       },
     });

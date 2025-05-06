@@ -6,6 +6,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { PaginationService } from '../common/services/pagination.service';
+import { Status } from 'generated/prisma';
 
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashed_password'),
@@ -131,7 +132,7 @@ describe('UserService', () => {
         limit: 10,
         name: 'User',
         email: 'example.com',
-        status: 'active',
+        status: Status.active,
       });
 
       expect(PaginationService.paginate).toHaveBeenCalledWith(
@@ -142,7 +143,7 @@ describe('UserService', () => {
           limit: 10,
           name: 'User',
           email: 'example.com',
-          status: 'active',
+          status: Status.active,
         },
       );
 
@@ -189,7 +190,7 @@ describe('UserService', () => {
         name: 'Test User',
         email: 'test@example.com',
         telephone: '1234567890',
-        status: 'active',
+        status: Status.active,
       };
 
       mockPrismaService.users.findFirst.mockResolvedValue(mockUser);
@@ -254,36 +255,40 @@ describe('UserService', () => {
   });
 
   describe('delete', () => {
-    it('should soft delete a user successfully', async () => {
+    it('should mark a user as inactive', async () => {
+      const userId = 1;
       const mockUser = {
-        id: 1,
+        id: userId,
         name: 'Test User',
-        status: 'active',
+        email: 'test@example.com',
+        status: Status.active,
       };
 
-      mockPrismaService.users.findFirst.mockResolvedValue(mockUser);
+      jest.spyOn(service as any, 'verifyId').mockResolvedValue(mockUser);
       mockPrismaService.users.findUnique.mockResolvedValue(mockUser);
       mockPrismaService.users.update.mockResolvedValue({
         ...mockUser,
-        status: 'inactive',
+        status: Status.inactive,
       });
 
-      const result = await service.delete(1);
+      const result = await service.delete(userId);
 
+      expect(result).toBe('success deleting user');
       expect(mockPrismaService.users.update).toHaveBeenCalledWith({
-        where: { id: 1 },
+        where: { id: userId },
         data: {
-          status: 'inactive',
+          status: Status.inactive,
           updateAt: expect.any(Date),
         },
       });
-      expect(result).toBe('success deleting user');
     });
 
     it('should throw NotFoundException when user is not found', async () => {
-      mockPrismaService.users.findFirst.mockResolvedValue(null);
+      const userId = 999;
+      jest.spyOn(service as any, 'verifyId').mockRejectedValue(new NotFoundException('User not found'));
+      mockPrismaService.users.findUnique.mockResolvedValue(null);
 
-      await expect(service.delete(999)).rejects.toThrow(NotFoundException);
+      await expect(service.delete(userId)).rejects.toThrow(NotFoundException);
     });
   });
 });

@@ -14,6 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { PaginatedResponseDto } from '../common/dto/paginated-response.dto';
 import { PaginationService } from '../common/services/pagination.service';
+import { Status } from 'generated/prisma';
 
 @Injectable()
 export class UserService {
@@ -66,7 +67,7 @@ export class UserService {
     }
   }
 
-  async findAll(query: PaginationDto & { name?: string; email?: string; status?: string }) {
+  async findAll(query: PaginationDto & { name?: string; email?: string; status?: Status }) {
     const { name, email, status } = query;
 
     try {
@@ -174,7 +175,7 @@ export class UserService {
       await this.prisma.users.update({
         where: { id },
         data: {
-          status: 'inactive',
+          status: Status.inactive,
           updateAt: new Date(),
         },
       });
