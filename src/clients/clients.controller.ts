@@ -49,6 +49,6 @@ export class ClientController {
 
   @Delete(':id')
   async inactivate(@Param('id', ParseIntPipe) id: number) {
-    await this.clientService.inactivate(id);
+    return this.clientService.inactivate(id);
   }
 }

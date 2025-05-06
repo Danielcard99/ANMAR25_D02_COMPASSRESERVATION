@@ -4,6 +4,7 @@ import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { OrderStatus } from 'generated/prisma';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('reservations')
 @UseGuards(JwtAuthGuard)
@@ -17,11 +18,9 @@ export class ReservationController {
 
   @Get()
   findAll(
-    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
-    @Query('cpf') cpf?: string,
-    @Query('status') status?: OrderStatus,
+    @Query() query: PaginationDto & { cpf?: string; status?: OrderStatus },
   ) {
-    return this.reservationService.findAll(page, cpf, status);
+    return this.reservationService.findAll(query);
   }
 
   @Get(':id')
