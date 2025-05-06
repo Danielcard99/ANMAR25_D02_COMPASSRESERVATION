@@ -28,6 +28,7 @@ model space {
   status      Status   @default(active)
   createdAt   DateTime @default(now()) @db.Timestamp(0)
   updatedAt   DateTime @updatedAt @db.Timestamp(0)
+  orders      Order[]
 }
 
 model Resource {
@@ -38,6 +39,7 @@ model Resource {
   status      Status   @default(active)
   createdAt   DateTime @default(now()) @db.Timestamp(0)
   updatedAt   DateTime @updatedAt @db.Timestamp(0)
+  orders      OrderResource[]
 }
 
 model users {
@@ -69,11 +71,28 @@ model Client {
 model Order {
   id        Int         @id @default(autoincrement())
   status    OrderStatus @default(OPEN)
+  startDate DateTime    @db.Timestamp(0)
+  endDate   DateTime    @db.Timestamp(0)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
-  clientId Int
-  client   Client @relation(fields: [clientId], references: [id])
+  clientId  Int
+  client    Client @relation(fields: [clientId], references: [id])
+
+  spaceId   Int
+  space     space @relation(fields: [spaceId], references: [id])
+
+  resources OrderResource[]
 
   @@map("orders")
+}
+
+model OrderResource {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  order      Order    @relation(fields: [orderId], references: [id])
+  resourceId Int
+  resource   Resource @relation(fields: [resourceId], references: [id])
+
+  @@map("order_resources")
 }

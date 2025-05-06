@@ -1,23 +1,23 @@
 import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
-import { UserController } from './user/user.controller';
-import { UserService } from './user/user.service';
-import { AuthModule } from './auth/auth.module';
-import { JwtModule } from '@nestjs/jwt';
+import { UserModule } from './user/user.module';
 import { ClientModule } from './clients/clients.module';
+import { SpaceModule } from './space/space.module';
+import { ResourcesModule } from './resources/resources.module';
+import { ReservationModule } from './reservation/reservation.module';
 
 @Module({
   imports: [
     PrismaModule,
-    AuthModule,
+    UserModule,
     ClientModule,
-    JwtModule.register({
-      secret: `Yj3[xV0@borz-'#T3jE9l54"ySQlpA7+`,
-      signOptions: { expiresIn: '100s' },
-    }),
+    SpaceModule,
+    ResourcesModule,
+    ReservationModule,
   ],
-  controllers: [UserController],
-  providers: [UserService],
-  exports: [UserService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

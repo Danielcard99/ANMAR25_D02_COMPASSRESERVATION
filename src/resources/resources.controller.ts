@@ -7,13 +7,17 @@ import {
   Get,
   Query,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { ResourcesService } from './resources.service';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
 import { Status } from 'generated/prisma';
+import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('resources')
+@UseGuards(JwtAuthGuard)
 export class ResourcesController {
   constructor(private readonly resourcesService: ResourcesService) {}
 
@@ -32,15 +36,20 @@ export class ResourcesController {
 
   @Get()
   findAll(
-    @Query('page') page: number,
-    @Query('status') status?: string,
-    @Query('name') name?: string,
+    @Query() query: PaginationDto & { status?: string; name?: string },
   ) {
-    const statusEnum = status
-      ? (Status[status.toUpperCase() as keyof typeof Status] as Status)
-      : undefined;
+    const { status, name, ...pagination } = query;
+    let statusEnum: Status | undefined;
+    if (status) {
+      const upperStatus = status.toUpperCase();
+      if (upperStatus === 'ACTIVE') {
+        statusEnum = Status.active;
+      } else if (upperStatus === 'INACTIVE') {
+        statusEnum = Status.inactive;
+      }
+    }
 
-    return this.resourcesService.findAll(page, statusEnum, name);
+    return this.resourcesService.findAll({ ...pagination, status: statusEnum, name });
   }
 
   @Get(':id')

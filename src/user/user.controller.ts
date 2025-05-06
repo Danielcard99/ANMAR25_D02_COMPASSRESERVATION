@@ -12,7 +12,8 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
-
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Status } from 'generated/prisma';
 
 @Controller('user')
 export class UserController {
@@ -27,8 +28,19 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(@Query() query: any) {
-    return this.userService.findAll(query);
+  findAll(@Query() query: PaginationDto & { name?: string; email?: string; status?: string }) {
+    const { status, name, email, ...pagination } = query;
+    let statusEnum: Status | undefined;
+    if (status) {
+      const upperStatus = status.toUpperCase();
+      if (upperStatus === 'ACTIVE') {
+        statusEnum = Status.active;
+      } else if (upperStatus === 'INACTIVE') {
+        statusEnum = Status.inactive;
+      }
+    }
+
+    return this.userService.findAll({ ...pagination, status: statusEnum, name, email });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -37,8 +49,7 @@ export class UserController {
     return this.userService.findOne(+id);
   }
 
-
- @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
