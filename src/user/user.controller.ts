@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
-
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('user')
 export class UserController {
@@ -27,8 +27,18 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(@Query() query: any) {
-    return this.userService.findAll(query);
+  findAll(
+    @Query() paginationDto: PaginationDto,
+    @Query('name') name?: string,
+    @Query('email') email?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.userService.findAll({
+      ...paginationDto,
+      name,
+      email,
+      status,
+    });
   }
 
   @UseGuards(JwtAuthGuard)

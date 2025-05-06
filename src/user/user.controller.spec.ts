@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -73,26 +74,71 @@ describe('UserController', () => {
   });
 
   describe('findAll', () => {
-    it('should return all users with query parameters', async () => {
-      const query = {
+    it('should return paginated users with query parameters', async () => {
+      const paginationDto: PaginationDto = {
         page: 1,
         limit: 10,
+      };
+
+      const query = {
+        ...paginationDto,
         name: 'Test',
         email: 'test@example.com',
         status: 'active',
       };
 
-      const expectedUsers = [
-        { name: 'User 1', email: 'user1@example.com', telephone: '123' },
-        { name: 'User 2', email: 'user2@example.com', telephone: '456' },
-      ];
+      const expectedResponse = {
+        items: [
+          { name: 'User 1', email: 'user1@example.com', telephone: '123' },
+          { name: 'User 2', email: 'user2@example.com', telephone: '456' },
+        ],
+        meta: {
+          page: 1,
+          limit: 10,
+          total: 2,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
 
-      mockUserService.findAll.mockResolvedValue(expectedUsers);
+      mockUserService.findAll.mockResolvedValue(expectedResponse);
 
-      const result = await controller.findAll(query);
+      const result = await controller.findAll(
+        paginationDto,
+        query.name,
+        query.email,
+        query.status,
+      );
 
       expect(userService.findAll).toHaveBeenCalledWith(query);
-      expect(result).toEqual(expectedUsers);
+      expect(result).toEqual(expectedResponse);
+    });
+
+    it('should return paginated users without filters', async () => {
+      const paginationDto: PaginationDto = {
+        page: 1,
+        limit: 10,
+      };
+
+      const expectedResponse = {
+        items: [],
+        meta: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
+
+      mockUserService.findAll.mockResolvedValue(expectedResponse);
+
+      const result = await controller.findAll(paginationDto);
+
+      expect(userService.findAll).toHaveBeenCalledWith(paginationDto);
+      expect(result).toEqual(expectedResponse);
     });
   });
 

@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { OrderStatus } from 'generated/prisma';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginationService } from '../common/services/pagination.service';
 
 @Injectable()
 export class ReservationService {
@@ -179,9 +181,8 @@ export class ReservationService {
     return updatedReservation;
   }
 
-  async findAll(page: number = 1, cpf?: string, status?: OrderStatus) {
-    const take = 10;
-    const skip = (page - 1) * take;
+  async findAll(query: PaginationDto & { cpf?: string; status?: OrderStatus }) {
+    const { cpf, status } = query;
 
     const where = {
       ...(cpf && {
@@ -192,10 +193,10 @@ export class ReservationService {
       ...(status && { status }),
     };
 
-    const [reservations, total] = await Promise.all([
-      this.prisma.order.findMany({
-        skip,
-        take,
+    return PaginationService.paginate(
+      () => this.prisma.order.findMany({
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
         where,
         include: {
           client: true,
@@ -207,17 +208,9 @@ export class ReservationService {
           },
         },
       }),
-      this.prisma.order.count({ where }),
-    ]);
-
-    return {
-      data: reservations,
-      meta: {
-        total,
-        page,
-        lastPage: Math.ceil(total / take),
-      },
-    };
+      () => this.prisma.order.count({ where }),
+      query,
+    );
   }
 
   async findOne(id: number) {

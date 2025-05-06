@@ -5,9 +5,16 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import { PaginationService } from '../common/services/pagination.service';
 
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashed_password'),
+}));
+
+jest.mock('../common/services/pagination.service', () => ({
+  PaginationService: {
+    paginate: jest.fn(),
+  },
 }));
 
 describe('UserService', () => {
@@ -22,6 +29,7 @@ describe('UserService', () => {
       findFirst: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
     },
   };
 
@@ -104,7 +112,19 @@ describe('UserService', () => {
         { name: 'User 2', email: 'user2@example.com', telephone: '456' },
       ];
 
-      mockPrismaService.users.findMany.mockResolvedValue(mockUsers);
+      const mockPaginatedResponse = {
+        items: mockUsers,
+        meta: {
+          page: 1,
+          limit: 10,
+          total: 2,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+      };
+
+      (PaginationService.paginate as jest.Mock).mockResolvedValue(mockPaginatedResponse);
 
       const result = await service.findAll({
         page: 1,
@@ -114,21 +134,51 @@ describe('UserService', () => {
         status: 'active',
       });
 
-      expect(mockPrismaService.users.findMany).toHaveBeenCalledWith({
-        where: {
-          name: { contains: 'User', mode: 'insensitive' },
-          email: { contains: 'example.com', mode: 'insensitive' },
+      expect(PaginationService.paginate).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.any(Function),
+        {
+          page: 1,
+          limit: 10,
+          name: 'User',
+          email: 'example.com',
           status: 'active',
         },
-        select: {
-          name: true,
-          email: true,
-          telephone: true,
+      );
+
+      expect(result).toEqual(mockPaginatedResponse);
+    });
+
+    it('should handle empty results', async () => {
+      const mockPaginatedResponse = {
+        items: [],
+        meta: {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
         },
-        skip: 0,
-        take: 10,
+      };
+
+      (PaginationService.paginate as jest.Mock).mockResolvedValue(mockPaginatedResponse);
+
+      const result = await service.findAll({
+        page: 1,
+        limit: 10,
       });
-      expect(result).toEqual(mockUsers);
+
+      expect(PaginationService.paginate).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.any(Function),
+        {
+          page: 1,
+          limit: 10,
+        },
+      );
+
+      expect(result).toEqual(mockPaginatedResponse);
     });
   });
 

@@ -3,6 +3,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
 import { Status } from 'generated/prisma';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { PaginationService } from '../common/services/pagination.service';
 
 @Injectable()
 export class ResourcesService {
@@ -38,21 +40,26 @@ export class ResourcesService {
     return updatedResource;
   }
 
-  async findAll(page: number = 1, status?: Status, name?: string) {
-    const take = 10;
-    const skip = (page - 1) * take;
+  async findAll(query: PaginationDto & { status?: Status; name?: string }) {
+    const { status, name } = query;
 
-    const resources = await this.prisma.resource.findMany({
-      skip,
-      take,
-      where: {
-        status,
-        name: {
-          contains: name,
+    return PaginationService.paginate(
+      () => this.prisma.resource.findMany({
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+        where: {
+          status,
+          name: name ? { contains: name, mode: 'insensitive' } : undefined,
         },
-      },
-    });
-    return resources;
+      }),
+      () => this.prisma.resource.count({
+        where: {
+          status,
+          name: name ? { contains: name, mode: 'insensitive' } : undefined,
+        },
+      }),
+      query,
+    );
   }
 
   async findOne(id: number) {
