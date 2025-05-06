@@ -6,7 +6,9 @@ import {
     IsNotEmpty,
     IsString,
     IsUUID,
-    ValidateNested
+    ValidateNested,
+    IsInt,
+    IsOptional
 } from 'class-validator';
 
 export class ReservationResourceDto {
@@ -28,37 +30,46 @@ export class ReservationResourceDto {
 
 export class CreateReservationDto {
     @ApiProperty({
-        description: 'Space ID',
-        example: '123e4567-e89b-12d3-a456-426614174000',
+        description: 'Client ID',
+        example: 1,
     })
+    @IsInt()
     @IsNotEmpty()
-    @IsUUID()
-    spaceId: string;
+    clientId: number;
 
     @ApiProperty({
-        description: 'Start date and time of the reservation',
-        example: '2025-05-01T14:00:00.000Z',
+        description: 'Space ID',
+        example: 1,
     })
+    @IsInt()
     @IsNotEmpty()
+    spaceId: number;
+
+    @ApiProperty({
+        description: 'Resource IDs',
+        example: [1, 2, 3],
+        type: [Number],
+    })
+    @IsArray()
+    @IsInt({ each: true })
+    @IsNotEmpty()
+    resourceIds: number[];
+
+    @ApiProperty({
+        description: 'Reservation start date and time',
+        example: '2024-03-20T10:00:00Z',
+    })
     @IsDate()
     @Type(() => Date)
+    @IsNotEmpty()
     startDate: Date;
 
     @ApiProperty({
-        description: 'End date and time of the reservation',
-        example: '2025-05-01T16:00:00.000Z',
+        description: 'Reservation end date and time',
+        example: '2024-03-20T12:00:00Z',
     })
-    @IsNotEmpty()
     @IsDate()
     @Type(() => Date)
+    @IsNotEmpty()
     endDate: Date;
-
-    @ApiProperty({
-        description: 'Resources to be reserved',
-        type: [ReservationResourceDto],
-    })
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ReservationResourceDto)
-    resources: ReservationResourceDto[];
 }

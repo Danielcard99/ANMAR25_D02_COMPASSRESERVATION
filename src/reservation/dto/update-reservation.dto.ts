@@ -5,12 +5,12 @@ import {
     IsEnum,
     IsOptional
 } from 'class-validator';
-import { ReservationStatus } from '../entities/reservation.entity';
+import { OrderStatus } from '../../../generated/prisma';
 
 export class UpdateReservationDto {
     @ApiProperty({
-        description: 'Start date and time of the reservation',
-        example: '2025-05-01T14:00:00.000Z',
+        description: 'Reservation start date and time',
+        example: '2024-03-20T10:00:00Z',
         required: false,
     })
     @IsOptional()
@@ -19,8 +19,8 @@ export class UpdateReservationDto {
     startDate?: Date;
 
     @ApiProperty({
-        description: 'End date and time of the reservation',
-        example: '2025-05-01T16:00:00.000Z',
+        description: 'Reservation end date and time',
+        example: '2024-03-20T12:00:00Z',
         required: false,
     })
     @IsOptional()
@@ -29,11 +29,12 @@ export class UpdateReservationDto {
     endDate?: Date;
 
     @ApiProperty({
-        description: 'Status of the reservation',
-        enum: ReservationStatus,
+        description: 'Reservation status',
+        enum: OrderStatus,
+        example: OrderStatus.APPROVED,
         required: false,
     })
     @IsOptional()
-    @IsEnum(ReservationStatus)
-    status?: ReservationStatus;
+    @IsEnum(OrderStatus)
+    status?: OrderStatus;
 }
